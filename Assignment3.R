@@ -28,18 +28,16 @@ FullInformation <- function(alpha,N){
   p_bandits = runif(2)
   arm = which.max(p_bandits)
   r=0
-  for(t in 1:30){
-    p_arm = (arm_states[arm,2]+1)/(rowSums(arm_states)[arm]+2)
+  for(t in 1:N){
+    p_arm = p_bandits[arm]
     x = rbinom(1,1,p_arm)
     arm_states[arm,x+1] = arm_states[arm,x+1]+1
     r = r + alpha^(t-1) *x
-    #p_bandits = runif(2)
-    #arm = which.max(p_bandits)
       }
   return(r)
 }
 
-
+#Bayesian with Gittins Index
 Bayesian <- function(alpha,N){
   arm_states = matrix(c(0),2,2)
   p_bandits = runif(2)
@@ -55,6 +53,7 @@ Bayesian <- function(alpha,N){
   return(r)
 }
 
+#Thompson Sampling
 Thompson <- function(alpha,N){
   arm_states = matrix(c(0),2,2)
   p_bandits = runif(2)
@@ -70,7 +69,7 @@ Thompson <- function(alpha,N){
   return(r)
 }
 
-
+#Greedy Q-Learning
 Greedy <- function(alpha,N,epsilon,initial_prob){
   
   Q = matrix(c(initial_prob),1,2)
@@ -92,11 +91,12 @@ Greedy <- function(alpha,N,epsilon,initial_prob){
   return(r)
 }
 
-
+#calculate Gittins Index
 alpha = 0.95
 N = 40
 gittins_table = Gittins(alpha,N)
 
+#Simulation
 N_sim = 1000
 full_info_reward = 0
 bayesian_reward = 0
@@ -110,9 +110,9 @@ for(n in 1:N_sim){
   fi = FullInformation(alpha,N-1)
   ba = Bayesian(alpha,N-1)
   th = Thompson(alpha,N-1)
-  gr = Greedy(alpha,N-1,0,0)
-  opt_gr = Greedy(alpha,N-1,0,1)
-  eps_gr = Greedy(alpha,N-1,0.02,0)
+  gr = Greedy(alpha,N-1,epsilon=0,initial_prob = 0)
+  opt_gr = Greedy(alpha,N-1,epsilon=0,initial_prob = 1)
+  eps_gr = Greedy(alpha,N-1,epsilon=0.3,initial_prob = 0)
   
 
   full_info_reward = full_info_reward + fi
@@ -126,6 +126,35 @@ for(n in 1:N_sim){
 full_info_reward = full_info_reward/N_sim
 bayesian_reward = bayesian_reward/N_sim
 thompson_reward = thompson_reward/N_sim
+greedy_reward = greedy_reward/N_sim
+opt_greedy_reward = opt_greedy_reward/N_sim
+eps_greedy_reward = eps_greedy_reward/N_sim
+
+print(c("Full info:",full_info_reward))
+print(c("Bayesian:",bayesian_reward))
+print(c("Thompson Sampling:",thompson_reward))
+print(c("Greedy Q-Learning:",greedy_reward))
+print(c("Optimistic Greedy Q-Learning:",opt_greedy_reward))
+print(c("Epsilon-Greedy Q-Learning:",eps_greedy_reward))
+
+#Find optimal epsilon
+epsilons = c(0,0.01,0.02,0.05,0.1,0.2,0.3,0.4,0.5)
+eps_greedy_rewards = c()
+
+for(eps in epsilons){
+  eps_greedy_reward = 0
+  for(n in 1:N_sim){
+    eps_gr = Greedy(alpha,N-1,epsilon=eps,initial_prob = 0)
+    eps_greedy_reward = eps_greedy_reward + eps_gr
+  }
+  eps_greedy_rewards = c(eps_greedy_rewards,eps_greedy_reward)
+}
+eps_greedy_rewards = eps_greedy_rewards/N_sim
+
+
+plot(epsilons,eps_greedy_rewards,type='o',xlab='Epsilons',ylab='Discounted No. of Successes')
+
+
 
 
 
