@@ -24,14 +24,12 @@ return(m)
 }
 
 FullInformation <- function(alpha,N){
-  arm_states = matrix(c(0),2,2)
   p_bandits = runif(2)
   arm = which.max(p_bandits)
   r=0
   for(t in 1:N){
     p_arm = p_bandits[arm]
     x = rbinom(1,1,p_arm)
-    arm_states[arm,x+1] = arm_states[arm,x+1]+1
     r = r + alpha^(t-1) *x
       }
   return(r)
